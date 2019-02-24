@@ -136,7 +136,24 @@ def validate_google_token(token):
         api.logger.info("Empty token, denying access")
         return False
 
-    resp = requests.get(api.config["GOOGLE_OAUTH_URI"], params={"id_token": token})
+    # In non-prod environments, remove the call google to ease
+    # testing.
+    resp = None
+    if app.config["ENV"] == "production":
+        resp = requests.get(api.config["GOOGLE_OAUTH_URI"], params={"id_token": token})
+    else:
+        from collections import namedtuple
+        now = datetime.datetime.now()
+        exp = now + datetime.timedelta(days=1)
+        resp = namedtuple("response", ["ok", "status_code", "json"])(
+            ok=True,
+            status_code = 200,
+            json = lambda: {
+                "iss": "accounts.google.com",
+                "exp": exp.timestamp(),
+                "aud": api.config["GOOGLE_CLIENT_ID"]
+            }
+        )
 
     if not resp.ok:
         api.logger.info("Request to %s failed: %s", resp.url, resp.status_code)
