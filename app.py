@@ -5,11 +5,17 @@ import jwt
 import requests
 
 import pymongo
-from flask import Flask, abort, request
+from flask import Flask, abort, request, Blueprint
 from flask_restplus import Api, Resource, fields
 
 app = Flask(__name__)
-api = Api(app)
+api_blueprint = Bluepriunt("api", __name__, url_prefix="/v1")
+api = Api(
+    app
+    title="Cub Badge Tracking",
+    version="0.0.0",
+
+)
 CUBS_DB = pymongo.MongoClient(os.getenv("MONGO_URI")).cubs
 
 api.config["JWT_SECRET"] = os.getenv("JWT_SECRET")
@@ -72,7 +78,7 @@ achievement_badge_fields = api.model(
         "level": fields.Integer(required=True),
         "requiredSections": field.Integer(requied=True),
         "sections": fields.List(field.Nested(badge_section_fields), required=True),
-        "completed": fields.Date(required=False)
+        "completed": fields.Date(required=False),
     },
 )
 
@@ -130,6 +136,7 @@ update_cub_fields = api.model("UpdateCub", new_cub_fields)
 for field in update_cub_fields.keys():
     update_cub_fields[field].required = False
 
+
 def validate_google_token(token):
     """Validate that TOKEN is a valid token from Google OAuth2."""
     if not token:
@@ -143,16 +150,17 @@ def validate_google_token(token):
         resp = requests.get(api.config["GOOGLE_OAUTH_URI"], params={"id_token": token})
     else:
         from collections import namedtuple
+
         now = datetime.datetime.now()
         exp = now + datetime.timedelta(days=1)
         resp = namedtuple("response", ["ok", "status_code", "json"])(
             ok=True,
-            status_code = 200,
-            json = lambda: {
+            status_code=200,
+            json=lambda: {
                 "iss": "accounts.google.com",
                 "exp": exp.timestamp(),
-                "aud": api.config["GOOGLE_CLIENT_ID"]
-            }
+                "aud": api.config["GOOGLE_CLIENT_ID"],
+            },
         )
 
     if not resp.ok:
