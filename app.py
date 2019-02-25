@@ -11,7 +11,7 @@ from flask_restplus import Api, Resource, fields
 app = Flask(__name__)
 api_blueprint = Bluepriunt("api", __name__, url_prefix="/v1")
 api = Api(
-    app
+    app,
     title="Cub Badge Tracking",
     version="0.0.0",
 
@@ -20,7 +20,7 @@ CUBS_DB = pymongo.MongoClient(os.getenv("MONGO_URI")).cubs
 
 api.config["JWT_SECRET"] = os.getenv("JWT_SECRET")
 api.config["JWT_ALGO"] = os.getenv("JWT_ALGO")
-api.config["ALLOWED_EMAILS"] = os.getenv("ALLOWED_EMAILS").split(":")
+api.config["ALLOWED_EMAILS"] = os.getenv("ALLOWED_EMAILS", "").split(":")
 api.config["GOOGLE_OAUTH_URI"] = os.getenv("GOOGLE_OAUTH_URI")
 api.config["GOOGLE_CLIENT_ID"] = os.getenv("GOOGLE_CLIENT_ID")
 
